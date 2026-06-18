@@ -14,7 +14,6 @@
         ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         
-        /* Modal Styles */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -35,7 +34,7 @@
         .modal-content {
             background: white;
             border-radius: 20px;
-            max-width: 500px;
+            max-width: 600px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -126,12 +125,72 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
         }
-        .btn-danger {
-            background: #ef4444;
+        
+        .car-item-inline {
+            display: inline-block;
+            background: #334155;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin: 2px 4px;
             color: white;
         }
-        .btn-danger:hover {
-            background: #dc2626;
+        .car-item-inline .fuel-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: 4px;
+        }
+        .fuel-dot-95 { background: #ef4444; }
+        .fuel-dot-91 { background: #22c55e; }
+        .fuel-dot-98 { background: #3b82f6; }
+
+        /* Card Preview */
+        #cardPreview {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            max-width: 450px;
+            width: 100%;
+            margin: 0 auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        #cardPreview .card-header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-radius: 12px;
+            padding: 18px;
+            color: white;
+            margin-bottom: 15px;
+        }
+        #cardPreview .record-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 4px solid #e2e8f0;
+            border-radius: 50%;
+            border-top-color: #4f46e5;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* زر الطباعة المباشر */
+        .btn-print-card {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        .btn-print-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
         }
     </style>
 </head>
@@ -149,7 +208,6 @@
 
     <main class="max-w-7xl mx-auto px-4 pb-12 space-y-6">
 
-        <!-- Search and Action Buttons -->
         <div class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/60">
             <div class="flex flex-col md:flex-row gap-4">
                 <div class="flex-1 relative">
@@ -168,7 +226,6 @@
             </div>
         </div>
 
-        <!-- Cards Grid -->
         <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div class="col-span-full text-center py-12 text-slate-400 font-medium">
                 <i class="fa-solid fa-circle-notch animate-spin text-indigo-600 text-2xl mb-3 block"></i>
@@ -187,9 +244,7 @@
                 </h2>
                 <button class="modal-close" onclick="closeRequestModal()">&times;</button>
             </div>
-
             <form id="requestForm" class="space-y-4">
-                <!-- الاسم الكامل -->
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">
                         <i class="fa-regular fa-user text-indigo-500"></i> الاسم الكامل
@@ -198,43 +253,49 @@
                         class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none"
                         placeholder="أدخل الاسم الكامل">
                 </div>
-
-                <!-- نوع السيارة -->
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">
-                        <i class="fa-solid fa-car text-indigo-500"></i> نوع السيارة
+                        <i class="fa-solid fa-car text-indigo-500"></i> السيارات
+                        <span class="text-xs font-normal text-slate-400">(يمكنك إضافة أكثر من سيارة)</span>
                     </label>
-                    <input type="text" id="reqCarType" required 
-                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none"
-                        placeholder="مثال: هيونداي إلنترا">
+                    <div id="reqCarsContainer" class="space-y-3">
+                        <div class="car-item bg-slate-50 p-3 rounded-xl border border-slate-200">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-sm font-bold text-slate-600">🚗 السيارة 1</span>
+                                <button type="button" onclick="removeReqCar(this)" class="text-red-400 hover:text-red-600 text-sm mr-auto hidden">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">نوع السيارة</label>
+                                    <input type="text" class="req-car-type w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none" 
+                                        placeholder="مثال: تويوتا كامري">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">الموديل</label>
+                                    <input type="number" class="req-car-model w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none" 
+                                        placeholder="2020" min="1900" max="2026">
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <label class="block text-xs font-medium text-slate-600 mb-1">نوع الوقود</label>
+                                <select class="req-car-fuel w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                                    <option value="95">أحمر (95) - 2.33 ريال/لتر</option>
+                                    <option value="91" selected>أخضر (91) - 2.18 ريال/لتر</option>
+                                    <option value="98">أزرق (98) - 4.51 ريال/لتر</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addReqCar()" 
+                        class="mt-2 w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold py-2 px-4 rounded-xl border-2 border-dashed border-indigo-300 transition-all duration-200">
+                        <i class="fa-solid fa-plus ml-2"></i> إضافة سيارة أخرى
+                    </button>
                 </div>
-
-                <!-- موديل السيارة -->
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">
-                        <i class="fa-regular fa-calendar text-indigo-500"></i> موديل السيارة
-                    </label>
-                    <input type="number" id="reqCarModel" required 
-                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none"
-                        placeholder="مثال: 2020" min="1900" max="2026">
-                </div>
-
-                <!-- نوع الوقود -->
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">
-                        <i class="fa-solid fa-gas-pump text-indigo-500"></i> نوع الوقود المفضل
-                    </label>
-                    <select id="reqFuelType" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none bg-white">
-                        <option value="95">أحمر (95) - 2.33 ريال/لتر</option>
-                        <option value="91" selected>أخضر (91) - 2.18 ريال/لتر</option>
-                        <option value="98">أزرق (98) - 4.51 ريال/لتر</option>
-                    </select>
-                </div>
-
-                <!-- الرقم السري -->
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">
-                        <i class="fa-solid fa-lock text-indigo-500"></i> الرقم السري
+                        <i class="fa-solid fa-lock text-indigo-500"></i> الرقم السري للبطاقة
                         <span class="text-xs font-normal text-slate-400">(4-8 أرقام فقط)</span>
                     </label>
                     <div class="pin-dots" id="reqPinDots">
@@ -255,8 +316,6 @@
                         <span>الرقم السري يجب أن يكون 4-8 أرقام فقط</span>
                     </div>
                 </div>
-
-                <!-- أزرار التحكم -->
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="submitRequest()" 
                         class="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
@@ -271,6 +330,31 @@
         </div>
     </div>
 
+    <!-- Modal: عرض البطاقة -->
+    <div class="modal-overlay" id="previewCardModal">
+        <div class="modal-content" style="max-width: 520px;">
+            <div class="modal-header">
+                <h2 class="text-lg font-bold text-slate-800">📇 بطاقة المصروفات</h2>
+                <button class="modal-close" onclick="closePreviewModal()">&times;</button>
+            </div>
+            <div id="previewLoading" class="text-center py-8">
+                <div class="loading-spinner"></div>
+                <p class="text-slate-400 text-sm mt-3">جاري تجهيز البطاقة...</p>
+            </div>
+            <div id="previewContent" class="hidden">
+                <div id="cardPreviewContainer"></div>
+                <div class="flex gap-3 mt-4">
+                    <button id="btnPrintCard" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-print"></i> طباعة البطاقة
+                    </button>
+                    <button onclick="closePreviewModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-times"></i> إغلاق
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Firebase Config
         const firebaseConfig = {
@@ -280,11 +364,78 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const bnzimRef = database.ref('bnzim');
-        const tlbatRef = database.ref('tlbat'); // مسار الطلبات
+        const tlbatRef = database.ref('tlbat');
 
         let structuredData = {};
+        let reqCarCounter = 1;
 
-        // الاستماع الفوري لقاعدة البيانات
+        // ========== وظائف السيارات في الطلب ==========
+        function addReqCar() {
+            reqCarCounter++;
+            const container = document.getElementById('reqCarsContainer');
+            const div = document.createElement('div');
+            div.className = 'car-item bg-slate-50 p-3 rounded-xl border border-slate-200';
+            div.innerHTML = `
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-sm font-bold text-slate-600">🚗 السيارة ${reqCarCounter}</span>
+                    <button type="button" onclick="removeReqCar(this)" class="text-red-400 hover:text-red-600 text-sm mr-auto">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">نوع السيارة</label>
+                        <input type="text" class="req-car-type w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none" 
+                            placeholder="مثال: تويوتا كامري">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">الموديل</label>
+                        <input type="number" class="req-car-model w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none" 
+                            placeholder="2020" min="1900" max="2026">
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">نوع الوقود</label>
+                    <select class="req-car-fuel w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                        <option value="95">أحمر (95) - 2.33 ريال/لتر</option>
+                        <option value="91" selected>أخضر (91) - 2.18 ريال/لتر</option>
+                        <option value="98">أزرق (98) - 4.51 ريال/لتر</option>
+                    </select>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeReqCar(btn) {
+            const items = document.querySelectorAll('#reqCarsContainer .car-item');
+            if (items.length <= 1) {
+                alert('⚠️ يجب أن يكون هناك سيارة واحدة على الأقل');
+                return;
+            }
+            btn.closest('.car-item').remove();
+            document.querySelectorAll('#reqCarsContainer .car-item').forEach((el, i) => {
+                el.querySelector('.text-sm.font-bold').textContent = `🚗 السيارة ${i + 1}`;
+            });
+        }
+
+        function getReqCars() {
+            const cars = [];
+            document.querySelectorAll('#reqCarsContainer .car-item').forEach(el => {
+                const type = el.querySelector('.req-car-type').value.trim();
+                const model = el.querySelector('.req-car-model').value.trim();
+                const fuel = el.querySelector('.req-car-fuel').value;
+                if (type || model) {
+                    cars.push({
+                        type: type || 'غير محدد',
+                        model: model || 'غير محدد',
+                        fuelType: fuel || '91'
+                    });
+                }
+            });
+            return cars;
+        }
+
+        // ========== الاستماع لقاعدة البيانات ==========
         bnzimRef.on('value', (snapshot) => {
             structuredData = {};
 
@@ -298,29 +449,49 @@
 
             snapshot.forEach((userSnapshot) => {
                 const userName = userSnapshot.key;
-                let car = "غير محدد";
-                let model = "غير محدد";
+                const cars = [];
                 const records = [];
 
                 userSnapshot.forEach((expenseSnapshot) => {
                     const data = expenseSnapshot.val();
-                    if (data.car) car = data.car;
-                    if (data.model) model = data.model;
 
-                    records.push({
-                        amount: parseFloat(data.amount) || 0,
-                        liters: parseFloat(data.liters) || 0,
-                        odometer: data.odometer || "غير محدد",
-                        date: data.timestamp || "",
-                        fuelName: data.fuelName || "غير محدد"
-                    });
+                    if (data.car && data.model) {
+                        const exists = cars.some(c => c.type === data.car && c.model === data.model);
+                        if (!exists) {
+                            cars.push({
+                                type: data.car,
+                                model: data.model,
+                                fuelType: data.fuelType || '91'
+                            });
+                        }
+                    }
+                    
+                    if (data.cars && Array.isArray(data.cars)) {
+                        data.cars.forEach(c => {
+                            const exists = cars.some(car => car.type === c.type && car.model === c.model);
+                            if (!exists) {
+                                cars.push(c);
+                            }
+                        });
+                    }
+
+                    if(data.amount !== undefined) {
+                        records.push({
+                            amount: parseFloat(data.amount) || 0,
+                            liters: parseFloat(data.liters) || 0,
+                            odometer: data.odometer || "غير محدد",
+                            date: data.timestamp || "",
+                            fuelName: data.fuelName || "غير محدد",
+                            car: data.car || "غير محدد",
+                            model: data.model || "غير محدد"
+                        });
+                    }
                 });
 
                 records.sort((a, b) => new Date(b.date) - new Date(a.date));
 
                 structuredData[userName] = {
-                    car: car,
-                    model: model,
+                    cars: cars.length > 0 ? cars : [{ type: 'غير محدد', model: 'غير محدد', fuelType: '91' }],
                     records: records
                 };
             });
@@ -328,6 +499,7 @@
             renderCards();
         });
 
+        // ========== عرض البطاقات ==========
         function renderCards() {
             const cardsGrid = document.getElementById('cardsGrid');
             const searchQuery = document.getElementById('searchBox').value.trim().toLowerCase();
@@ -343,12 +515,39 @@
                 hasData = true;
                 const userData = structuredData[userName];
                 const records = userData.records;
+                const cars = userData.cars;
                 
                 const totalAmount = records.reduce((sum, item) => sum + item.amount, 0);
                 const totalLiters = records.reduce((sum, item) => sum + item.liters, 0);
 
                 const card = document.createElement('div');
                 card.className = "bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-200";
+
+                let carsHtml = '';
+                const fuelColors = { '95': 'fuel-dot-95', '91': 'fuel-dot-91', '98': 'fuel-dot-98' };
+                
+                if (cars.length > 1) {
+                    carsHtml = `<div class="flex flex-wrap gap-1 mt-1">`;
+                    cars.forEach(c => {
+                        const fuelType = c.fuelType || '91';
+                        carsHtml += `
+                            <span class="car-item-inline">
+                                <span class="fuel-dot ${fuelColors[fuelType] || 'fuel-dot-91'}"></span>
+                                ${c.type} (${c.model})
+                            </span>
+                        `;
+                    });
+                    carsHtml += `</div>`;
+                } else if (cars.length === 1) {
+                    const c = cars[0];
+                    const fuelType = c.fuelType || '91';
+                    carsHtml = `
+                        <span class="text-xs text-slate-300 mt-1">
+                            <span class="fuel-dot ${fuelColors[fuelType] || 'fuel-dot-91'}" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:4px;"></span>
+                            ${c.type} (${c.model})
+                        </span>
+                    `;
+                }
 
                 let cardHtml = `
                     <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-5 text-white">
@@ -360,10 +559,7 @@
                                     </div>
                                     <span class="font-bold tracking-wide text-base">${userName}</span>
                                 </div>
-                                <div class="flex items-center gap-3 text-xs text-slate-300 mt-1">
-                                    <span><i class="fa-solid fa-car"></i> ${userData.car}</span>
-                                    <span><i class="fa-solid fa-tag"></i> ${userData.model}</span>
-                                </div>
+                                ${carsHtml}
                             </div>
                             <div class="text-left">
                                 <div class="text-xs text-slate-400 font-medium">إجمالي المصروف</div>
@@ -384,13 +580,19 @@
                                 <span class="text-lg font-bold text-amber-300">${records.length ? (totalLiters / records.length).toFixed(2) : '0'}</span>
                             </div>
                         </div>
+                        <div class="mt-3">
+                            <button onclick="showCardPreview('${userName}')" 
+                                class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 px-4 py-1.5 rounded-full border border-amber-500/30 transition-all cursor-pointer font-bold">
+                                <i class="fa-solid fa-print"></i> طباعة / حفظ البطاقة
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="p-4 flex-1 overflow-y-auto max-h-[300px] space-y-3 bg-slate-50/50">
                         <p class="text-xxs font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="fa-solid fa-history"></i> سجلات التعبئة (${records.length}):</p>
                 `;
 
-                records.forEach(rec => {
+                records.slice(0, 10).forEach(rec => {
                     const cleanDate = rec.date ? rec.date.replace('T', ' ') : 'غير محدد';
                     cardHtml += `
                         <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-xxs flex justify-between items-center hover:border-slate-200 transition-colors">
@@ -398,8 +600,9 @@
                                 <div class="text-xs text-slate-400 font-semibold flex items-center gap-1">
                                     <i class="fa-regular fa-calendar text-slate-400"></i> ${cleanDate}
                                 </div>
-                                <div class="text-xs text-slate-500 font-medium flex items-center gap-2">
+                                <div class="text-xs text-slate-500 font-medium flex items-center gap-2 flex-wrap">
                                     ${rec.fuelName !== "غير محدد" ? `<span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">${rec.fuelName}</span>` : ''}
+                                    ${rec.car && rec.car !== "غير محدد" ? `<span class="text-slate-400 text-xs">🚗 ${rec.car}</span>` : ''}
                                     ${rec.odometer !== "غير محدد" ? `<span><i class="fa-solid fa-gauge-high text-slate-300"></i> ${rec.odometer} كم</span>` : ''}
                                 </div>
                             </div>
@@ -410,6 +613,10 @@
                         </div>
                     `;
                 });
+
+                if (records.length > 10) {
+                    cardHtml += `<p class="text-xs text-slate-400 text-center">... وعرض ${records.length - 10} سجلات أخرى</p>`;
+                }
 
                 cardHtml += `</div>`;
                 card.innerHTML = cardHtml;
@@ -424,53 +631,240 @@
             }
         }
 
-        // ========== وظائف الطلب (tlbat) ==========
-        
+        // ========== عرض البطاقة في المودال ==========
+        function showCardPreview(userName) {
+            const userData = structuredData[userName];
+            if (!userData) {
+                alert('لم يتم العثور على بيانات هذا الشخص');
+                return;
+            }
+
+            // إظهار المودال مع تحميل
+            document.getElementById('previewLoading').classList.remove('hidden');
+            document.getElementById('previewContent').classList.add('hidden');
+            document.getElementById('previewCardModal').classList.add('active');
+
+            const records = userData.records;
+            const cars = userData.cars;
+            const totalAmount = records.reduce((sum, item) => sum + item.amount, 0);
+            const totalLiters = records.reduce((sum, item) => sum + item.liters, 0);
+
+            const fuelColors = { '95': '#ef4444', '91': '#22c55e', '98': '#3b82f6' };
+
+            // بناء البطاقة
+            let carsHtml = '';
+            cars.forEach(c => {
+                const fuelType = c.fuelType || '91';
+                carsHtml += `
+                    <span style="display:inline-block; background:#334155; padding:4px 12px; border-radius:20px; font-size:12px; margin:2px; color:white;">
+                        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${fuelColors[fuelType] || '#22c55e'}; margin-left:4px;"></span>
+                        ${c.type} (${c.model})
+                    </span>
+                `;
+            });
+
+            let recordsHtml = '';
+            records.slice(0, 6).forEach(rec => {
+                const cleanDate = rec.date ? rec.date.replace('T', ' ') : 'غير محدد';
+                recordsHtml += `
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9; font-size:13px;">
+                        <div style="text-align: right;">
+                            <div style="color:#4a5568; font-weight:600;">${cleanDate}</div>
+                            <div style="color:#718096; font-size:11px; margin-top:2px;">🚗 ${rec.car || ''} | ${rec.fuelName || ''}</div>
+                        </div>
+                        <div style="text-align:left;">
+                            <div style="font-weight:bold; color:#2d3748;">${rec.amount.toFixed(2)} ريال</div>
+                            <div style="color:#a0aec0; font-size:11px;">${rec.liters.toFixed(2)} لتر</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const cardHTML = `
+                <div id="cardPreview" style="background:white; border-radius:16px; padding:20px; font-family:system-ui, sans-serif; max-width:450px; margin:0 auto; box-shadow:0 4px 20px rgba(0,0,0,0.1);">
+                    <div style="background:linear-gradient(135deg, #1e293b, #0f172a); border-radius:12px; padding:18px; color:white; margin-bottom:15px;">
+                        <div style="display:flex; justify-content:space-between; align-items:start;">
+                            <div style="text-align: right;">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span style="font-size:20px;">👤</span>
+                                    <span style="font-weight:900; font-size:18px;">${userName}</span>
+                                </div>
+                                <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:4px;">${carsHtml}</div>
+                            </div>
+                            <div style="text-align:left;">
+                                <div style="font-size:10px; color:#94a3b8; font-weight:bold;">إجمالي المصروف</div>
+                                <span style="font-size:22px; font-weight:900; color:#34d399;">${totalAmount.toFixed(2)} <span style="font-size:12px;">ريال</span></span>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-top:15px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.1);">
+                            <div style="text-align:center;">
+                                <div style="font-size:10px; color:#94a3b8;">اللترات</div>
+                                <div style="font-size:16px; font-weight:bold; color:#67e8f9; margin-top:2px;">${totalLiters.toFixed(2)}</div>
+                            </div>
+                            <div style="text-align:center;">
+                                <div style="font-size:10px; color:#94a3b8;">التعبئات</div>
+                                <div style="font-size:16px; font-weight:bold; color:#ffffff; margin-top:2px;">${records.length}</div>
+                            </div>
+                            <div style="text-align:center;">
+                                <div style="font-size:10px; color:#94a3b8;">متوسط التعبئة</div>
+                                <div style="font-size:16px; font-weight:bold; color:#fcd34d; margin-top:2px;">${records.length ? (totalLiters / records.length).toFixed(2) : '0'} لتر</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size:11px; font-weight:bold; color:#718096; margin-bottom:6px;">📋 آخر العمليات والمسجلات</div>
+                        ${recordsHtml || '<div style="color:#a0aec0; font-size:12px; text-align:center; padding:20px;">لا توجد سجلات تعبئة مسبقة</div>'}
+                    </div>
+                    <div style="text-align:center; margin-top:15px; padding-top:10px; border-top:1px solid #edf2f7; font-size:10px; color:#a0aec0; font-weight:500;">
+                        نظام إدارة مصروفات المركبات الذكي
+                    </div>
+                </div>
+            `;
+
+            // عرض البطاقة
+            document.getElementById('cardPreviewContainer').innerHTML = cardHTML;
+            
+            // إخفاء التحميل وإظهار المحتوى
+            document.getElementById('previewLoading').classList.add('hidden');
+            document.getElementById('previewContent').classList.remove('hidden');
+
+            // إعداد زر الطباعة
+            document.getElementById('btnPrintCard').onclick = function() {
+                printCardDirect(userName);
+            };
+        }
+
+        // ========== طباعة مباشرة بدون html2canvas ==========
+        function printCardDirect(userName) {
+            const cardElement = document.getElementById('cardPreview');
+            if (!cardElement) {
+                alert('البطاقة غير جاهزة للطباعة');
+                return;
+            }
+
+            // فتح نافذة جديدة للطباعة
+            const printWindow = window.open('', '_blank', 'width=600,height=800');
+            if (!printWindow) {
+                alert('الرجاء السماح للنوافذ المنبثقة');
+                return;
+            }
+
+            // نسخ محتوى البطاقة إلى النافذة الجديدة
+            const cardHTML = cardElement.outerHTML;
+            
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html dir="rtl">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>بطاقة ${userName}</title>
+                    <style>
+                        body { 
+                            display: flex; 
+                            justify-content: center; 
+                            align-items: center; 
+                            min-height: 100vh; 
+                            margin: 0; 
+                            padding: 20px; 
+                            background: #f1f5f9; 
+                            font-family: system-ui, sans-serif;
+                        }
+                        @media print {
+                            body { background: white; padding: 0; }
+                            .no-print { display: none !important; }
+                        }
+                        .print-container {
+                            max-width: 450px;
+                            width: 100%;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-container">
+                        ${cardHTML}
+                        <div class="no-print" style="text-align:center; margin-top:20px;">
+                            <button onclick="window.print()" style="padding:10px 30px; background:#f59e0b; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:16px;">
+                                <i class="fa-solid fa-print"></i> طباعة
+                            </button>
+                            <button onclick="window.close()" style="padding:10px 30px; background:#e2e8f0; color:#475569; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:16px; margin-right:10px;">
+                                إغلاق
+                            </button>
+                        </div>
+                    </div>
+                    <script>
+                        // طباعة تلقائية بعد التحميل (اختياري)
+                        // window.onload = function() { setTimeout(window.print, 1000); };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        // ========== وظائف المودال ==========
+        function closePreviewModal() {
+            document.getElementById('previewCardModal').classList.remove('active');
+            document.getElementById('previewLoading').classList.remove('hidden');
+            document.getElementById('previewContent').classList.add('hidden');
+        }
+
         function openRequestModal() {
             document.getElementById('requestModal').classList.add('active');
             document.getElementById('reqFullName').focus();
-            // إعادة تعيين الحقول
             document.getElementById('reqFullName').value = '';
-            document.getElementById('reqCarType').value = '';
-            document.getElementById('reqCarModel').value = '';
-            document.getElementById('reqFuelType').value = '91';
             document.getElementById('reqPin').value = '';
             document.getElementById('reqPinError').classList.add('hidden');
             updateRequestPinDots('');
+            const container = document.getElementById('reqCarsContainer');
+            container.innerHTML = `
+                <div class="car-item bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-sm font-bold text-slate-600">🚗 السيارة 1</span>
+                        <button type="button" onclick="removeReqCar(this)" class="text-red-400 hover:text-red-600 text-sm mr-auto hidden">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">نوع السيارة</label>
+                            <input type="text" class="req-car-type w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none" 
+                                placeholder="مثال: تويوتا كامري">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">الموديل</label>
+                            <input type="number" class="req-car-model w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none" 
+                                placeholder="2020" min="1900" max="2026">
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="block text-xs font-medium text-slate-600 mb-1">نوع الوقود</label>
+                        <select class="req-car-fuel w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                            <option value="95">أحمر (95) - 2.33 ريال/لتر</option>
+                            <option value="91" selected>أخضر (91) - 2.18 ريال/لتر</option>
+                            <option value="98">أزرق (98) - 4.51 ريال/لتر</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            reqCarCounter = 1;
         }
 
         function closeRequestModal() {
             document.getElementById('requestModal').classList.remove('active');
         }
 
-        // إغلاق المودال عند النقر خارج المحتوى
-        document.getElementById('requestModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeRequestModal();
-            }
-        });
-
-        // تحديث نقاط الرقم السري في الطلب
         function updateRequestPinDots(pin) {
             const dots = document.querySelectorAll('#reqPinDots .pin-dot');
             const length = pin.length;
-            
             dots.forEach((dot, index) => {
-                if (index < length) {
-                    dot.classList.add('filled');
-                } else {
-                    dot.classList.remove('filled');
-                }
+                if (index < length) dot.classList.add('filled');
+                else dot.classList.remove('filled');
             });
         }
 
-        // التحقق من الرقم السري أثناء الكتابة
         document.getElementById('reqPin').addEventListener('input', function() {
-            const pin = this.value;
-            // منع غير الأرقام
-            this.value = pin.replace(/\D/g, '');
+            this.value = this.value.replace(/\D/g, '');
             updateRequestPinDots(this.value);
-            
             const errorEl = document.getElementById('reqPinError');
             if (this.value.length > 0 && (this.value.length < 4 || this.value.length > 8)) {
                 errorEl.classList.remove('hidden');
@@ -479,104 +873,64 @@
             }
         });
 
-        // منع اللصق في حقل الرقم السري
-        document.getElementById('reqPin').addEventListener('paste', function(e) {
-            e.preventDefault();
-        });
-
-        // إرسال الطلب
+        // ========== إرسال الطلب ==========
         function submitRequest() {
             const fullName = document.getElementById('reqFullName').value.trim();
-            const carType = document.getElementById('reqCarType').value.trim();
-            const carModel = document.getElementById('reqCarModel').value.trim();
-            const fuelType = document.getElementById('reqFuelType').value;
             const pin = document.getElementById('reqPin').value.trim();
+            const cars = getReqCars();
 
-            // التحقق من الحقول
             if (!fullName) {
                 alert('الرجاء إدخال الاسم الكامل');
-                document.getElementById('reqFullName').focus();
                 return;
             }
-            if (!carType) {
-                alert('الرجاء إدخال نوع السيارة');
-                document.getElementById('reqCarType').focus();
+            if (cars.length === 0) {
+                alert('الرجاء إضافة سيارة واحدة على الأقل');
                 return;
             }
-            if (!carModel) {
-                alert('الرجاء إدخال موديل السيارة');
-                document.getElementById('reqCarModel').focus();
-                return;
-            }
-            if (!pin) {
-                alert('الرجاء إدخال الرقم السري');
-                document.getElementById('reqPin').focus();
+            if (!pin || pin.length < 4 || pin.length > 8) {
+                alert('الرجاء التحقق من طول الرقم السري (4-8 أرقام)');
                 return;
             }
 
-            // التحقق من صحة الرقم السري
-            if (!/^\d{4,8}$/.test(pin)) {
-                document.getElementById('reqPinError').classList.remove('hidden');
-                document.getElementById('reqPin').focus();
-                return;
-            }
-
-            // التحقق من صحة الموديل
-            const modelNum = parseInt(carModel);
-            if (isNaN(modelNum) || modelNum < 1900 || modelNum > 2026) {
-                alert('الرجاء إدخال موديل صحيح (من 1900 إلى 2026)');
-                document.getElementById('reqCarModel').focus();
-                return;
-            }
-
-            // التحقق من عدم وجود الاسم مسبقاً
             bnzimRef.child(fullName).once('value').then((snapshot) => {
                 if (snapshot.exists()) {
                     alert(`⚠️ الشخص "${fullName}" مسجل مسبقاً في النظام.`);
                     return;
                 }
 
-                // إنشاء طلب جديد في مسار tlbat
                 const requestRef = tlbatRef.push();
                 requestRef.set({
                     fullName: fullName,
-                    carType: carType,
-                    carModel: carModel,
-                    fuelType: fuelType,
+                    cars: cars,
                     pin: pin,
-                    status: 'pending', // pending, approved, rejected
+                    status: 'pending',
                     requestDate: firebase.database.ServerValue.TIMESTAMP,
                     requestedBy: 'user'
                 }).then(() => {
                     alert('✅ تم إرسال طلبك بنجاح! سيتم مراجعته من قبل المشرف.');
                     closeRequestModal();
-                    
-                    // إعادة تعيين الحقول
-                    document.getElementById('reqFullName').value = '';
-                    document.getElementById('reqCarType').value = '';
-                    document.getElementById('reqCarModel').value = '';
-                    document.getElementById('reqFuelType').value = '91';
-                    document.getElementById('reqPin').value = '';
-                    updateRequestPinDots('');
-                    document.getElementById('reqPinError').classList.add('hidden');
                 }).catch((error) => {
-                    console.error('خطأ في إرسال الطلب:', error);
                     alert('حدث خطأ أثناء إرسال الطلب: ' + error.message);
                 });
-            }).catch((error) => {
-                console.error('خطأ في التحقق:', error);
-                alert('حدث خطأ في التحقق من البيانات: ' + error.message);
             });
         }
 
-        // إغلاق المودال بالضغط على ESC
+        // ========== أحداث عامة ==========
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeRequestModal();
+                closePreviewModal();
             }
         });
 
-        // تحميل البيانات عند بدء الصفحة
+        document.getElementById('requestModal').addEventListener('click', function(e) {
+            if (e.target === this) closeRequestModal();
+        });
+
+        document.getElementById('previewCardModal').addEventListener('click', function(e) {
+            if (e.target === this) closePreviewModal();
+        });
+
         console.log('✅ نظام بطاقات المصروفات جاهز');
     </script>
 </body>

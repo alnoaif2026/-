@@ -13,6 +13,126 @@
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .modal-close {
+            cursor: pointer;
+            font-size: 24px;
+            color: #94a3b8;
+            transition: color 0.3s;
+            background: none;
+            border: none;
+        }
+        .modal-close:hover {
+            color: #ef4444;
+        }
+        .pin-dots {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .pin-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            transition: all 0.3s;
+        }
+        .pin-dot.filled {
+            background: #4f46e5;
+            transform: scale(1.1);
+        }
+        .pin-input {
+            letter-spacing: 8px;
+            font-size: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .action-buttons .btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+        }
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
@@ -21,7 +141,7 @@
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center space-x-3 space-x-reverse">
                 <i class="fa-solid fa-id-card text-2xl text-amber-400"></i>
-                <h1 class="text-xl font-black">بطاقات مصروفات البنزين لكل شخص</h1>
+                <h1 class="text-xl font-black">بطاقات مصروفات البنزين</h1>
             </div>
             <span class="text-xs bg-white/20 px-3 py-1 rounded-full border border-white/10 backdrop-blur-md font-medium">تحديث فوري ⚡</span>
         </div>
@@ -29,14 +149,26 @@
 
     <main class="max-w-7xl mx-auto px-4 pb-12 space-y-6">
 
-        <div class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/60 max-w-md mx-auto">
-            <div class="relative">
-                <i class="fa-solid fa-filter absolute right-3 top-3.5 text-slate-400"></i>
-                <input type="text" id="searchBox" oninput="renderCards()" placeholder="ابحث عن شخص محدد..." 
-                    class="w-full pl-3 pr-9 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <!-- Search and Action Buttons -->
+        <div class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/60">
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1 relative">
+                    <i class="fa-solid fa-filter absolute right-3 top-3.5 text-slate-400"></i>
+                    <input type="text" id="searchBox" oninput="renderCards()" placeholder="ابحث عن شخص محدد..." 
+                        class="w-full pl-3 pr-9 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="action-buttons">
+                    <button onclick="openRequestModal()" class="btn btn-primary">
+                        <i class="fa-solid fa-user-plus"></i> طلب إضافة اسم جديد
+                    </button>
+                    <a href="https://alnoaif2026.github.io/" target="_blank" class="btn btn-success">
+                        <i class="fa-solid fa-gas-pump"></i> تسجيل تعبئة جديدة
+                    </a>
+                </div>
             </div>
         </div>
 
+        <!-- Cards Grid -->
         <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div class="col-span-full text-center py-12 text-slate-400 font-medium">
                 <i class="fa-solid fa-circle-notch animate-spin text-indigo-600 text-2xl mb-3 block"></i>
@@ -46,8 +178,101 @@
 
     </main>
 
+    <!-- Modal: طلب إضافة اسم جديد -->
+    <div class="modal-overlay" id="requestModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="text-xl font-bold text-slate-800">
+                    <i class="fa-solid fa-user-plus text-indigo-500"></i> طلب إضافة اسم جديد
+                </h2>
+                <button class="modal-close" onclick="closeRequestModal()">&times;</button>
+            </div>
+
+            <form id="requestForm" class="space-y-4">
+                <!-- الاسم الكامل -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                        <i class="fa-regular fa-user text-indigo-500"></i> الاسم الكامل
+                    </label>
+                    <input type="text" id="reqFullName" required 
+                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none"
+                        placeholder="أدخل الاسم الكامل">
+                </div>
+
+                <!-- نوع السيارة -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                        <i class="fa-solid fa-car text-indigo-500"></i> نوع السيارة
+                    </label>
+                    <input type="text" id="reqCarType" required 
+                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none"
+                        placeholder="مثال: هيونداي إلنترا">
+                </div>
+
+                <!-- موديل السيارة -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                        <i class="fa-regular fa-calendar text-indigo-500"></i> موديل السيارة
+                    </label>
+                    <input type="number" id="reqCarModel" required 
+                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none"
+                        placeholder="مثال: 2020" min="1900" max="2026">
+                </div>
+
+                <!-- نوع الوقود -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                        <i class="fa-solid fa-gas-pump text-indigo-500"></i> نوع الوقود المفضل
+                    </label>
+                    <select id="reqFuelType" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none bg-white">
+                        <option value="95">أحمر (95) - 2.33 ريال/لتر</option>
+                        <option value="91" selected>أخضر (91) - 2.18 ريال/لتر</option>
+                        <option value="98">أزرق (98) - 4.51 ريال/لتر</option>
+                    </select>
+                </div>
+
+                <!-- الرقم السري -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                        <i class="fa-solid fa-lock text-indigo-500"></i> الرقم السري
+                        <span class="text-xs font-normal text-slate-400">(4-8 أرقام فقط)</span>
+                    </label>
+                    <div class="pin-dots" id="reqPinDots">
+                        <span class="pin-dot" data-index="0"></span>
+                        <span class="pin-dot" data-index="1"></span>
+                        <span class="pin-dot" data-index="2"></span>
+                        <span class="pin-dot" data-index="3"></span>
+                        <span class="pin-dot hidden" data-index="4"></span>
+                        <span class="pin-dot hidden" data-index="5"></span>
+                        <span class="pin-dot hidden" data-index="6"></span>
+                        <span class="pin-dot hidden" data-index="7"></span>
+                    </div>
+                    <input type="password" id="reqPin" maxlength="8" required
+                        class="pin-input w-full px-4 py-3 border-2 border-indigo-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none bg-white"
+                        placeholder="••••">
+                    <div id="reqPinError" class="text-xs text-red-500 mt-1 hidden">
+                        <i class="fa-solid fa-exclamation-circle"></i>
+                        <span>الرقم السري يجب أن يكون 4-8 أرقام فقط</span>
+                    </div>
+                </div>
+
+                <!-- أزرار التحكم -->
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="submitRequest()" 
+                        class="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
+                        <i class="fa-solid fa-paper-plane ml-2"></i> إرسال الطلب
+                    </button>
+                    <button type="button" onclick="closeRequestModal()" 
+                        class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-6 rounded-xl transition-all duration-200">
+                        <i class="fa-solid fa-times ml-2"></i> إلغاء
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // 1. ربط إعدادات Firebase
+        // Firebase Config
         const firebaseConfig = {
             databaseURL: "https://hsabat-a4353-default-rtdb.firebaseio.com"
         };
@@ -55,8 +280,9 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const bnzimRef = database.ref('bnzim');
+        const tlbatRef = database.ref('tlbat'); // مسار الطلبات
 
-        let structuredData = {}; // { "اسم الشخص": { car, model, records: [...] } }
+        let structuredData = {};
 
         // الاستماع الفوري لقاعدة البيانات
         bnzimRef.on('value', (snapshot) => {
@@ -70,7 +296,6 @@
                 return;
             }
 
-            // معالجة البيانات: استخراج السيارة والموديل من أول سجل إن وجد
             snapshot.forEach((userSnapshot) => {
                 const userName = userSnapshot.key;
                 let car = "غير محدد";
@@ -79,8 +304,6 @@
 
                 userSnapshot.forEach((expenseSnapshot) => {
                     const data = expenseSnapshot.val();
-                    
-                    // استخراج السيارة والموديل من أي سجل (نفترض أنها ثابتة للشخص)
                     if (data.car) car = data.car;
                     if (data.model) model = data.model;
 
@@ -93,7 +316,6 @@
                     });
                 });
 
-                // ترتيب السجلات من الأحدث للأقدم
                 records.sort((a, b) => new Date(b.date) - new Date(a.date));
 
                 structuredData[userName] = {
@@ -106,7 +328,6 @@
             renderCards();
         });
 
-        // دالة بناء ورسم البطاقات
         function renderCards() {
             const cardsGrid = document.getElementById('cardsGrid');
             const searchQuery = document.getElementById('searchBox').value.trim().toLowerCase();
@@ -123,11 +344,9 @@
                 const userData = structuredData[userName];
                 const records = userData.records;
                 
-                // حساب الإجماليات
                 const totalAmount = records.reduce((sum, item) => sum + item.amount, 0);
                 const totalLiters = records.reduce((sum, item) => sum + item.liters, 0);
 
-                // إنشاء كرت الشخص
                 const card = document.createElement('div');
                 card.className = "bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-200";
 
@@ -171,7 +390,6 @@
                         <p class="text-xxs font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="fa-solid fa-history"></i> سجلات التعبئة (${records.length}):</p>
                 `;
 
-                // إضافة التسجيلات
                 records.forEach(rec => {
                     const cleanDate = rec.date ? rec.date.replace('T', ' ') : 'غير محدد';
                     cardHtml += `
@@ -205,6 +423,161 @@
                     </div>`;
             }
         }
+
+        // ========== وظائف الطلب (tlbat) ==========
+        
+        function openRequestModal() {
+            document.getElementById('requestModal').classList.add('active');
+            document.getElementById('reqFullName').focus();
+            // إعادة تعيين الحقول
+            document.getElementById('reqFullName').value = '';
+            document.getElementById('reqCarType').value = '';
+            document.getElementById('reqCarModel').value = '';
+            document.getElementById('reqFuelType').value = '91';
+            document.getElementById('reqPin').value = '';
+            document.getElementById('reqPinError').classList.add('hidden');
+            updateRequestPinDots('');
+        }
+
+        function closeRequestModal() {
+            document.getElementById('requestModal').classList.remove('active');
+        }
+
+        // إغلاق المودال عند النقر خارج المحتوى
+        document.getElementById('requestModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRequestModal();
+            }
+        });
+
+        // تحديث نقاط الرقم السري في الطلب
+        function updateRequestPinDots(pin) {
+            const dots = document.querySelectorAll('#reqPinDots .pin-dot');
+            const length = pin.length;
+            
+            dots.forEach((dot, index) => {
+                if (index < length) {
+                    dot.classList.add('filled');
+                } else {
+                    dot.classList.remove('filled');
+                }
+            });
+        }
+
+        // التحقق من الرقم السري أثناء الكتابة
+        document.getElementById('reqPin').addEventListener('input', function() {
+            const pin = this.value;
+            // منع غير الأرقام
+            this.value = pin.replace(/\D/g, '');
+            updateRequestPinDots(this.value);
+            
+            const errorEl = document.getElementById('reqPinError');
+            if (this.value.length > 0 && (this.value.length < 4 || this.value.length > 8)) {
+                errorEl.classList.remove('hidden');
+            } else {
+                errorEl.classList.add('hidden');
+            }
+        });
+
+        // منع اللصق في حقل الرقم السري
+        document.getElementById('reqPin').addEventListener('paste', function(e) {
+            e.preventDefault();
+        });
+
+        // إرسال الطلب
+        function submitRequest() {
+            const fullName = document.getElementById('reqFullName').value.trim();
+            const carType = document.getElementById('reqCarType').value.trim();
+            const carModel = document.getElementById('reqCarModel').value.trim();
+            const fuelType = document.getElementById('reqFuelType').value;
+            const pin = document.getElementById('reqPin').value.trim();
+
+            // التحقق من الحقول
+            if (!fullName) {
+                alert('الرجاء إدخال الاسم الكامل');
+                document.getElementById('reqFullName').focus();
+                return;
+            }
+            if (!carType) {
+                alert('الرجاء إدخال نوع السيارة');
+                document.getElementById('reqCarType').focus();
+                return;
+            }
+            if (!carModel) {
+                alert('الرجاء إدخال موديل السيارة');
+                document.getElementById('reqCarModel').focus();
+                return;
+            }
+            if (!pin) {
+                alert('الرجاء إدخال الرقم السري');
+                document.getElementById('reqPin').focus();
+                return;
+            }
+
+            // التحقق من صحة الرقم السري
+            if (!/^\d{4,8}$/.test(pin)) {
+                document.getElementById('reqPinError').classList.remove('hidden');
+                document.getElementById('reqPin').focus();
+                return;
+            }
+
+            // التحقق من صحة الموديل
+            const modelNum = parseInt(carModel);
+            if (isNaN(modelNum) || modelNum < 1900 || modelNum > 2026) {
+                alert('الرجاء إدخال موديل صحيح (من 1900 إلى 2026)');
+                document.getElementById('reqCarModel').focus();
+                return;
+            }
+
+            // التحقق من عدم وجود الاسم مسبقاً
+            bnzimRef.child(fullName).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    alert(`⚠️ الشخص "${fullName}" مسجل مسبقاً في النظام.`);
+                    return;
+                }
+
+                // إنشاء طلب جديد في مسار tlbat
+                const requestRef = tlbatRef.push();
+                requestRef.set({
+                    fullName: fullName,
+                    carType: carType,
+                    carModel: carModel,
+                    fuelType: fuelType,
+                    pin: pin,
+                    status: 'pending', // pending, approved, rejected
+                    requestDate: firebase.database.ServerValue.TIMESTAMP,
+                    requestedBy: 'user'
+                }).then(() => {
+                    alert('✅ تم إرسال طلبك بنجاح! سيتم مراجعته من قبل المشرف.');
+                    closeRequestModal();
+                    
+                    // إعادة تعيين الحقول
+                    document.getElementById('reqFullName').value = '';
+                    document.getElementById('reqCarType').value = '';
+                    document.getElementById('reqCarModel').value = '';
+                    document.getElementById('reqFuelType').value = '91';
+                    document.getElementById('reqPin').value = '';
+                    updateRequestPinDots('');
+                    document.getElementById('reqPinError').classList.add('hidden');
+                }).catch((error) => {
+                    console.error('خطأ في إرسال الطلب:', error);
+                    alert('حدث خطأ أثناء إرسال الطلب: ' + error.message);
+                });
+            }).catch((error) => {
+                console.error('خطأ في التحقق:', error);
+                alert('حدث خطأ في التحقق من البيانات: ' + error.message);
+            });
+        }
+
+        // إغلاق المودال بالضغط على ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeRequestModal();
+            }
+        });
+
+        // تحميل البيانات عند بدء الصفحة
+        console.log('✅ نظام بطاقات المصروفات جاهز');
     </script>
 </body>
 </html>
